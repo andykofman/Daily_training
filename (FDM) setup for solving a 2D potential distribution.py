@@ -12,27 +12,27 @@ def set_boundary_conditions(A, b, nx, ny, potentials):
     for i in range(nx):
         for j in range(ny):
             idx = i * ny + j
-            if not np.isnan(potentials[i, j]):
-                A[idx, :] = 0
-                A[idx, idx] = 1
-                b[idx] = potentials[i, j]
+            if not np.isnan(potentials[i, j]):      #Nan values handling
+                A[idx, :] = 0                       #force @Dirichlet
+                A[idx, idx] = 1                     #set Diagonal to 1
+                b[idx] = potentials[i, j]           #set the b vector according to the potential value
 
 def fdm_discretization(nx, ny, epsilon):
-    A = lil_matrix((nx * ny, nx * ny))
+    A = lil_matrix((nx * ny, nx * ny))          #Sparse Matrix
     b = np.zeros(nx * ny)
 
     dx = 1 / (nx - 1)
     dy = 1 / (ny - 1)
 
     for i in range(1, nx-1):
-        for j in range(1, ny-1):
-            idx = i * ny + j
-            A[idx, idx] = -2 * (1 / dx**2 + 1 / dy**2)
-            A[idx, idx-ny] = 1 / dx**2
-            A[idx, idx+ny] = 1 / dx**2
-            A[idx, idx-1] = 1 / dy**2
-            A[idx, idx+1] = 1 / dy**2
-
+        for j in range(1, ny-1): 
+            idx = i * ny +  j         #Flattened to 1D
+            A[idx, idx] = -2 * (1 / dx**2 + 1 / dy**2)  # Central point of the Grid
+            A[idx, idx - ny] = 1 / dx**2  # Left neighbor
+            A[idx, idx + ny] = 1 / dx**2  # Right neighbor
+            A[idx, idx - 1] = 1 / dy**2   # Bottom neighbor
+            A[idx, idx + 1] = 1 / dy**2   # Top neighbor
+    
     return A, b
 
 def solve_system(A, b):
@@ -48,6 +48,9 @@ def visualize_grid(potentials):
     plt.xlabel('x')
     plt.ylabel('y')
     plt.show()
+
+
+
 
 def main():
     # Get user input for grid size
